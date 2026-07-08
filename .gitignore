@@ -3,6 +3,7 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+.vscode
 web/node_modules
 backend/node_modules
 firmware/.pio
