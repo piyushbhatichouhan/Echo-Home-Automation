@@ -39,8 +39,6 @@ const http = require("http");
 let lastSensorSeen = Date.now();
 let offlineNotified = false;
 
-const USER_UID = "ldMux5f3kvc69gYTTLd10WpnE0k1";
-
 const sentReminders = new Set();
 
 let schedulesWatcherStarted = false;
@@ -59,92 +57,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(process.env.PORT || 10000);
-
-async function checkScheduleReminders() {
-  try {
-    if (Object.keys(schedulesCache).length === 0) return;
-
-    const now = new Date();
-
-    for (const [docId, schedule] of Object.entries(schedulesCache)) {
-      if (!schedule.enabled) continue;
-
-      const hour = schedule.hour;
-      const minute = schedule.minute;
-
-      const scheduleType = schedule.scheduleType || "daily";
-
-      const targetDate = schedule.targetDate || "";
-
-      const scheduleTime = new Date();
-
-      scheduleTime.setHours(hour);
-      scheduleTime.setMinutes(minute);
-      scheduleTime.setSeconds(0);
-      scheduleTime.setMilliseconds(0);
-
-      // DAILY
-      if (scheduleType === "daily") {
-        if (scheduleTime < now) {
-          scheduleTime.setDate(scheduleTime.getDate() + 1);
-        }
-      }
-
-      // TODAY
-      else if (scheduleType === "today") {
-        // schedule already points to today
-
-        if (scheduleTime < now) {
-          return;
-        }
-      }
-
-      // CUSTOM DATE
-      else if (scheduleType === "custom" && targetDate) {
-        const [y, m, d] = targetDate.split("-");
-
-        scheduleTime.setFullYear(Number(y), Number(m) - 1, Number(d));
-
-        if (scheduleTime < now) {
-          return;
-        }
-      }
-
-      const reminderTime = scheduleTime.getTime() - 30 * 60 * 1000;
-
-      const id = `${docId}-${scheduleTime.getTime()}`;
-
-      //   console.log(
-      //   `${doc.id}
-      //   now=${now.toLocaleString()}
-      //   execute=${scheduleTime.toLocaleString()}
-      //   reminder=${new Date(reminderTime).toLocaleString()}`
-      // );
-
-      if (
-        now.getTime() >= reminderTime &&
-        now.getTime() < reminderTime + 60000 &&
-        !sentReminders.has(id)
-      ) {
-        sentReminders.add(id);
-        const executionTime = scheduleTime.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        await sendNotificationToUser(
-          USER_UID,
-          "Upcoming Schedule",
-          `${docId} will execute in 30 minutes at ${executionTime}`,
-        );
-
-        // console.log("🔔 Reminder sent:", doc.id);
-      }
-    }
-  } catch (err) {
-    console.error(err);
-  }
-}
 
 async function cleanupExpiredSchedules() {
   try {
@@ -198,63 +110,6 @@ async function cleanupExpiredSchedules() {
 }
 
 // ================= MQTT =================
-async function sendNotificationToUser(uid, title, body) {
-  try {
-    const userDoc = await db.collection("users").doc(uid).get();
-
-    if (!userDoc.exists) {
-      console.log("❌ User document not found");
-      return;
-    }
-
-    const token = userDoc.data().fcmToken;
-
-    if (!token) {
-      console.log("❌ No FCM token found");
-      return;
-    }
-
-    const message = {
-      token,
-      data: {
-        hello: "world",
-      },
-    };
-
-    console.log(JSON.stringify(message, null, 2));
-    const response = await admin.messaging().send({
-      token,
-      notification: {
-        title,
-        body,
-      },
-    });
-
-    console.log("✅ Notification sent:", response);
-  } catch (err) {
-    console.error("❌ Notification error:", err);
-  }
-}
-async function testNotification(token) {
-  try {
-    const response = await admin.messaging().send({
-      token,
-      notification: {
-        title: "EcHO Test",
-        body: "Push notifications are working!",
-      },
-      android: {
-        notification: {
-          icon: "ic_launcher",
-          color: "#2196F3",
-        },
-      },
-    });
-    console.log("Notification sent:", response);
-  } catch (error) {
-    console.error("Notification error:", error);
-  }
-}
 
 async function handleRuntimeSnapshot(data) {
   try {
@@ -323,8 +178,6 @@ async function handleRuntimeSnapshot(data) {
       },
       { merge: true },
     );
-
-    console.log("⚡ Runtime snapshot processed");
   } catch (err) {
     console.error("Runtime processing failed", err);
   }
@@ -419,8 +272,6 @@ function attachMQTTHandlers() {
               humidity: Number(data.humidity),
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
-
-          console.log("✅ Sensor history saved");
         } catch (err) {
           console.error("❌ Sensor history save failed:", err);
         }
@@ -430,8 +281,6 @@ function attachMQTTHandlers() {
 
       if (topic === "echo/event") {
         try {
-          console.log("🚨 EVENT RECEIVED");
-          console.log(msg);
           const event = JSON.parse(msg);
 
           // ================= POWER TRACKING =================
@@ -508,9 +357,6 @@ function watchSchedules() {
 
         const json = JSON.stringify(payload);
 
-        // console.log("📤 SCHEDULE PUBLISH");
-        // console.log(json);
-
         client.publish("echo/schedule", json, {
           qos: 1,
           retain: true,
@@ -523,10 +369,6 @@ function watchSchedules() {
     });
 }
 
-// ================= MQTT ERRORS =================
-
-// ================= MESSAGE HANDLER =================
-
 // ================= CRASH PROTECTION =================
 
 process.on("unhandledRejection", (err) => {
@@ -537,18 +379,9 @@ process.on("uncaughtException", (err) => {
   console.error("❌ Uncaught Exception:", err);
 });
 
-// ================= PROCESS ERRORS =================
-
 // ================= STARTUP CHECK =================
 
 console.log("🚀 Backend Started");
-
-setInterval(() => {
-  console.log("💓 Backend Alive", new Date().toISOString());
-  // testNotification(
-  //   "dbJtvjQPSM6QoSzLopN31s:APA91bH44K3Y911HIUIp4OINwNwQgRlZbQpdni_17P_9x3tjPG5h0SVRIhFyMSKYp-UWpR8lDI9UL9BJshNyGjqnoaeKJ0hozigUbvT_L5knab_KDgIaLQw",
-  // );
-}, 15000);
 
 setInterval(
   () => {
@@ -556,31 +389,6 @@ setInterval(
   },
   4 * 60 * 1000,
 );
-
-// setInterval(() => {
-//   sendNotificationToUser(
-//     "ldMux5f3kvc69gYTTLd10WpnE0k1",
-//     "EcHO Test",
-//     "Notification system is working 🚀",
-//   );
-//   console.log("✅ Test notification sent");
-// }, 5000);
-
-setInterval(async () => {
-  const OFFLINE_LIMIT = 5 * 60 * 1000; // 5 minutes
-
-  if (Date.now() - lastSensorSeen > OFFLINE_LIMIT && !offlineNotified) {
-    offlineNotified = true;
-
-    await sendNotificationToUser(
-      USER_UID,
-      "EcHO Device Offline",
-      "Your home automation device has not reported data for 5 minutes.",
-    );
-
-    console.log("⚠ Offline notification sent");
-  }
-}, 60000);
 
 setInterval(checkScheduleReminders, 60000);
 
