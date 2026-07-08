@@ -1,6 +1,6 @@
 # Echo Home Automation
 
-An IoT home automation platform built around the ESP32, featuring real-time device control, cloud connectivity, scheduling, environmental monitoring, OTA firmware updates and power consumption monitoring.
+An IoT home automation platform built around the ESP32, featuring real-time device control, cloud connectivity, scheduling, environmental monitoring and power consumption monitoring.
 
 ---
 
@@ -16,7 +16,6 @@ An IoT home automation platform built around the ESP32, featuring real-time devi
 - RTC-based scheduling (Daily / Today / Custom Date)
 - LCD status display with automatic night mode
 - Manual LCD backlight control
-- OTA (Over-The-Air) firmware updates
 - Wi-Fi auto reconnect
 - Power consumption estimation
 - Sensor history logging
@@ -81,9 +80,9 @@ echo-home-automation/
                        │ • Runtime Storage  │   │ • DHT11 Sensor     │
                        │ • Sensor Logging   │   │ • DS1307 RTC       │
                        │                    │   │ • I²C LCD          │
-                       └──────────┬─────────┘   │ • OTA Updates      │
-                                  │             │ • Preferences NVS  │
-                                  └────────────►│ • Scheduler        │
+                       └──────────┬─────────┘   | • Preferences NVS  |
+                                  │             │ • Scheduler        │
+                                  └────────────►│                    │
                                     Via MQTT    └────────────────────┘
 ```
 
@@ -96,13 +95,12 @@ echo-home-automation/
 - ESP32
 - PlatformIO
 - Arduino Framework
-- MQTT
+- Pubsubclient
 - ArduinoJson
 - Preferences (NVS)
 - DHT Library
 - LiquidCrystal_I2C
 - RTClib
-- ArduinoOTA
 
 ---
 
@@ -373,7 +371,6 @@ echo/status
 - Secure TLS connection to cloud broker
 - Offline state persistence
 - Automatic Wi-Fi recovery
-- OTA firmware updates
 - LCD night mode with manual override
 - Runtime analytics
 - Power usage estimation

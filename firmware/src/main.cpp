@@ -14,8 +14,6 @@
 
 #include <Preferences.h>
 
-#include <ArduinoOTA.h>
-#include <ESPmDNS.h>
 // ================= WIFI =================
 
 #define WIFI_SSID " "
@@ -192,11 +190,7 @@ const unsigned long runtimePublishInterval =
 
 unsigned long lastRuntimePublish = 0;
 
-bool otaStarted = false;
-
 bool wifiConnecting = false;
-
-bool mdnsStarted = false;
 
 volatile bool scheduleUpdateFlag = false;
 String scheduleBuffer = "";
@@ -583,16 +577,6 @@ void handleWiFi()
     if (WiFi.status() == WL_CONNECTED)
     {
         wifiConnecting = false;
-        if (!mdnsStarted)
-        {
-            if (MDNS.begin("esp32-echo"))
-            {
-                mdnsStarted = true;
-                Serial.println("mDNS started");
-                Serial.println("esp32-echo.local");
-                mqttLog("INFO", "MDNS Started");
-            }
-        }
 
         return;
     }
@@ -608,12 +592,6 @@ void handleWiFi()
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
         wifiConnecting = true;
-    }
-
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        otaStarted = false;
-        mdnsStarted = false;
     }
 }
 
@@ -763,22 +741,6 @@ void handleSchedule()
 
     saveScheduleToNVS();
     // debugNVS();
-}
-
-void handleOTAStart()
-{
-    if (otaStarted)
-        return;
-
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        ArduinoOTA.setHostname(OTA_HOST);
-        ArduinoOTA.setPassword(OTA_PASSWORD);
-        ArduinoOTA.begin();
-
-        Serial.println("OTA Started congrats!");
-        otaStarted = true;
-    }
 }
 
 bool scheduleMatches(
@@ -979,11 +941,7 @@ void loop()
 
     //    ================= WIFI RECONNECT =================
     handleWiFi();
-    handleOTAStart();
-    if (otaStarted)
-    {
-        ArduinoOTA.handle();
-    }
+
     // ================= MQTT =================
 
     handleSchedule();
