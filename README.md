@@ -142,7 +142,7 @@ echo-home-automation/
 Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/echo-home.git
+git clone https://github.com/piyushbhatichouhan/Echo-Home-Automation.git
 ```
 
 Open
