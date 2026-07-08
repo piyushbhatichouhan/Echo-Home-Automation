@@ -1,8 +1,6 @@
-# EcHO Home
+# Echo Home Automation
 
-An end-to-end IoT home automation platform built around the ESP32, featuring real-time device control, cloud connectivity, scheduling, environmental monitoring, OTA firmware updates, and cross-platform management through a web dashboard and mobile application.
-
-EcHO Home is designed to provide reliable local hardware control while leveraging cloud services for remote access, data logging, automation, and monitoring.
+An IoT home automation platform built around the ESP32, featuring real-time device control, cloud connectivity, scheduling, environmental monitoring, OTA firmware updates and power consumption monitoring.
 
 ---
 
@@ -14,14 +12,12 @@ EcHO Home is designed to provide reliable local hardware control while leveragin
 - MQTT-based real-time communication
 - Firebase cloud integration
 - React web dashboard
-- Flutter mobile application
 - Temperature & humidity monitoring (DHT11)
 - RTC-based scheduling (Daily / Today / Custom Date)
 - LCD status display with automatic night mode
 - Manual LCD backlight control
 - OTA (Over-The-Air) firmware updates
 - Wi-Fi auto reconnect
-- Runtime tracking for connected devices
 - Power consumption estimation
 - Sensor history logging
 - Device event logging
@@ -33,14 +29,12 @@ EcHO Home is designed to provide reliable local hardware control while leveragin
 # Repository Structure
 
 ```
-echo-home/
+echo-home-automation/
 │
 ├── firmware/          # ESP32 PlatformIO firmware
 ├── backend/           # Node.js backend services
-├── dashboard/         # React web dashboard
-├── mobile/            # Flutter application
+├── web/               # React web dashboard
 ├── docs/              # Documentation
-├── assets/            # Images, logos, screenshots
 │
 ├── README.md
 ├── LICENSE
@@ -52,29 +46,45 @@ echo-home/
 # System Architecture
 
 ```
-                 ┌───────────────────┐
-                 │ React Dashboard   │
-                 └─────────┬─────────┘
-                           │
-                 ┌─────────▼─────────┐
-                 │ Firebase Firestore│
-                 └─────────┬─────────┘
-                           │
-                 ┌─────────▼─────────┐
-                 │ Node.js Backend   │
-                 └─────────┬─────────┘
-                           │
-                 HiveMQ Cloud MQTT Broker
-                           │
-                 ┌─────────▼─────────┐
-                 │ ESP32 Controller  │
-                 └─────────┬─────────┘
-                           │
-      ┌────────────────────┼─────────────────────┐
-      │                    │                     │
-   Relay Module        LCD Display        DHT11 Sensor
-      │
- Connected Appliances
+                          ┌────────────────────────────┐
+                          │      React Dashboard       │
+                          │                            │
+                          │ • Device Control           │
+                          │ • Live Monitoring          │
+                          │ • Scheduler                │
+                          │ • Device Settings          │
+                          │ • Live Serial Monitor      │
+                          └──────────┬───────┬─────────┘
+                                     │       │
+                     Firestore       │       │ MQTT
+                                     │       │
+                                     ▼       ▼
+                         ┌────────────────┐   ┌────────────────────┐
+                         │ Cloud Firestore│   │    HiveMQ Cloud    │
+                         │                │   │    MQTT Broker     │
+                         │ • Schedules    │   │                    │
+                         │ • Device Names │   │ • Live Switching   │
+                         │ • Settings     │   │ • Sensor Data      │
+                         │ • Runtime      │   │ • Status           │
+                         │ • History      │   |____________________|
+                         └────────┬───────┘           |
+                                  │                   |
+                                  │                   │
+                                  |                   │
+                                  │                   │
+                                  ▼                   ▼
+                       ┌────────────────────┐   ┌────────────────────┐
+                       │   Node.js Backend  │   │    ESP32 Device    │
+                       │                    │   │                    │
+                       │ • Firestore Watch  │   │ • 4 Relay Outputs  │
+                       │ • Schedule Sync    │   │ • Push Buttons     │
+                       │ • Runtime Storage  │   │ • DHT11 Sensor     │
+                       │ • Sensor Logging   │   │ • DS1307 RTC       │
+                       │                    │   │ • I²C LCD          │
+                       └──────────┬─────────┘   │ • OTA Updates      │
+                                  │             │ • Preferences NVS  │
+                                  └────────────►│ • Scheduler        │
+                                    Via MQTT    └────────────────────┘
 ```
 
 ---
@@ -100,8 +110,6 @@ echo-home/
 
 - Node.js
 - Firebase Admin SDK
-- MQTT.js
-- Express
 
 ---
 
@@ -109,7 +117,6 @@ echo-home/
 
 - React
 - Firebase
-- MQTT.js
 - CSS
 
 ---
@@ -370,9 +377,7 @@ echo/status
 - LCD night mode with manual override
 - Runtime analytics
 - Power usage estimation
-- Modular cloud architecture
-- Responsive web dashboard
-- Mobile application support
+- Web dashboard
 
 ---
 
@@ -380,13 +385,8 @@ echo/status
 
 - Wi-Fi configuration portal
 - Multi-device support
-- Energy analytics dashboard
 - Voice assistant integration
-- Push notifications
-- Role-based user access
 - Device grouping
-- Scenes and automation rules
-- Matter compatibility
 - ESP-NOW support
 
 ---
@@ -399,6 +399,4 @@ This project is licensed under the MIT License.
 
 # Author
 
-Developed by **EcHO**
-
-An IoT platform focused on building reliable, cloud-connected smart home solutions using ESP32, React, Flutter, Firebase, and MQTT.
+Developed by **Piyush Bhati Chouhan**
